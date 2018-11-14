@@ -282,25 +282,20 @@ public class DruidPooledStatement extends PoolableWrapper implements Statement {
     @Override
     public final ResultSet executeQuery(String sql) throws SQLException {
         checkOpen();
-
         incrementExecuteQueryCount();
         transactionRecord(sql);
 
         conn.beforeExecute();
         try {
             ResultSet rs = stmt.executeQuery(sql);
-
             if (rs == null) {
                 return rs;
             }
-
             DruidPooledResultSet poolableResultSet = new DruidPooledResultSet(this, rs);
             addResultSetTrace(poolableResultSet);
-
             return poolableResultSet;
         } catch (Throwable t) {
             errorCheck(t);
-
             throw checkException(t, sql);
         } finally {
             conn.afterExecute();

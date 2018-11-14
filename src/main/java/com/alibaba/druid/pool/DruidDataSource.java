@@ -1524,7 +1524,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
 
     public void handleConnectionException(DruidPooledConnection pooledConnection, Throwable t, String sql) throws SQLException {
         final DruidConnectionHolder holder = pooledConnection.getConnectionHolder();
-
+        //增加错误计数器
         errorCountUpdater.incrementAndGet(this);
         lastError = t;
         lastErrorTimeMillis = System.currentTimeMillis();
@@ -1534,15 +1534,16 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
 
             // broadcastConnectionError
             ConnectionEvent event = new ConnectionEvent(pooledConnection, sqlEx);
+            //触发connectionErrorOccurred事件
             for (ConnectionEventListener eventListener : holder.getConnectionEventListeners()) {
                 eventListener.connectionErrorOccurred(event);
             }
 
             // exceptionSorter.isExceptionFatal
+            //如果是isExceptionFatal，进行处理
             if (exceptionSorter != null && exceptionSorter.isExceptionFatal(sqlEx)) {
                 handleFatalError(pooledConnection, sqlEx, sql);
             }
-
             throw sqlEx;
         } else {
             throw new SQLException("Error", t);
@@ -1556,6 +1557,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             activeConnectionLock.lock();
             try {
                 if (conn.isTraceEnable()) {
+                    //从activeConnections中删除该连接
                     activeConnections.remove(conn);
                     conn.setTraceEnable(false);
                 }
@@ -1598,6 +1600,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                 }
             }
 
+            //抛弃连接
             this.discardConnection(holder.getConnection());
             holder.setDiscard(true);
         }

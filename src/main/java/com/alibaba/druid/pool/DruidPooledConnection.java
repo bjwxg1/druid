@@ -146,11 +146,9 @@ public class DruidPooledConnection extends PoolableWrapper implements javax.sql.
 
     public void closePoolableStatement(DruidPooledPreparedStatement stmt) throws SQLException {
         PreparedStatement rawStatement = stmt.getRawPreparedStatement();
-
         if (holder == null) {
             return;
         }
-
         if (stmt.isPooled()) {
             try {
                 rawStatement.clearParameters();
@@ -168,20 +166,15 @@ public class DruidPooledConnection extends PoolableWrapper implements javax.sql.
         stmtHolder.decrementInUseCount();
         if (stmt.isPooled() && holder.isPoolPreparedStatements() && stmt.exceptionCount == 0) {
             holder.getStatementPool().put(stmtHolder);
-
             stmt.clearResultSet();
             holder.removeTrace(stmt);
-
             stmtHolder.setFetchRowPeak(stmt.getFetchRowPeak());
-
             stmt.setClosed(true); // soft set close
         } else if (stmt.isPooled() && holder.isPoolPreparedStatements()) {
             // the PreparedStatement threw an exception
             stmt.clearResultSet();
             holder.removeTrace(stmt);
-
-            holder.getStatementPool()
-                    .remove(stmtHolder);
+            holder.getStatementPool().remove(stmtHolder);
         } else {
             try {
                 //Connection behind the statement may be in invalid state, which will throw a SQLException.
